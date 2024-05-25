@@ -6,7 +6,7 @@ using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
 
-using static PaymentGateway.Api.Services.ValidatePaymentRequest;
+using static PaymentGateway.Api.Services.UtilityFunctions;
 
 namespace PaymentGateway.Api.Controllers;
 
@@ -15,10 +15,12 @@ namespace PaymentGateway.Api.Controllers;
 public class PaymentsController : Controller
 {
     private readonly PaymentsRepository _paymentsRepository;    
+    private readonly UtilityFunctions _utilityFunctions;    
 
-    public PaymentsController(PaymentsRepository paymentsRepository)
+    public PaymentsController(PaymentsRepository paymentsRepository, UtilityFunctions utilityFunctions)
     {
-        _paymentsRepository = paymentsRepository;        
+        _paymentsRepository = paymentsRepository;
+        _utilityFunctions = utilityFunctions;        
     }
 
     [HttpGet("{id:guid}")]
@@ -38,31 +40,29 @@ public class PaymentsController : Controller
 
     [HttpPost]
     public async Task<ActionResult<PostPaymentResponse>> PostPayment([FromBody] PostPaymentRequest request)
-    {
-        UtilityFunctions ValidateFunctions = new UtilityFunctions();
-
+    {       
         //Define payment ID
         Guid paymentID = Guid.NewGuid();
 
         //Validate Data
-        bool isValidated = ValidateFunctions.ValidatePaymentDetails(request);      
+        bool isValidated = _utilityFunctions.ValidatePaymentDetails(request);      
         if (!isValidated)
         {
-            object response = ValidateFunctions.GeneratePostPaymentResponse(request, PaymentStatus.Rejected, paymentID);
+            object response = _utilityFunctions.GeneratePostPaymentResponse(request, PaymentStatus.Rejected, paymentID);
             return Ok(response);
         }
 
         //Bank Response
-        var bankResponse = await ValidateFunctions.PostToBank(request);
+        var bankResponse = await _utilityFunctions.PostToBank(request);
 
         PostPaymentResponse paymentDetails;
         if (bankResponse != null && bankResponse.Authorized)
         {
-            paymentDetails = ValidateFunctions.GeneratePostPaymentDBItem(request, PaymentStatus.Authorized, paymentID);
+            paymentDetails = _utilityFunctions.GeneratePostPaymentDBItem(request, PaymentStatus.Authorized, paymentID);
         }
         else
         {
-            paymentDetails = ValidateFunctions.GeneratePostPaymentDBItem(request, PaymentStatus.Declined, paymentID);
+            paymentDetails = _utilityFunctions.GeneratePostPaymentDBItem(request, PaymentStatus.Declined, paymentID);
         }
 
         //Add Data to DB

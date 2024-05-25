@@ -21,7 +21,7 @@ public class PaymentsRepository
     }
 }
 
-public class ValidatePaymentRequest
+public class UtilityFunctions
 {
     // List of valid ISO currency codes
     private static readonly string[] ValidCurrencyCodes = { "USD", "EUR", "GBP" };
@@ -55,7 +55,7 @@ public class ValidatePaymentRequest
         // Currency validation
         if (string.IsNullOrWhiteSpace(request.Currency) ||
             request.Currency.Length != 3 ||
-            !ValidCurrencyCodes.Contains(request.Currency.ToUpper(CultureInfo.InvariantCulture)))
+            !ValidCurrencyCodes.Contains(request.Currency.ToUpper()))
         {
             validated = false;
         }
@@ -75,88 +75,84 @@ public class ValidatePaymentRequest
 
         return validated;
     }
-
-    public class UtilityFunctions
-    {
     public bool ValidatePaymentDetails(PostPaymentRequest request)
+    {
+        UtilityFunctions validator = new UtilityFunctions();
+        bool isValid = validator.Validate(request);
+
+        if (!isValid)
         {
-            ValidatePaymentRequest validator = new ValidatePaymentRequest();
-            bool isValid = validator.Validate(request);
-
-            if (!isValid)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return false;
         }
-
-        public object GeneratePostPaymentResponse(PostPaymentRequest request, Enum paymentStatus, Guid paymentID)
+        else
         {
-            var responsePayment = new GetPaymentResponse
-            {
-                Id = paymentID,
-                Status = paymentStatus.ToString(),
-                CardNumberLastFour = Convert.ToInt32(request.CardNumber.Substring(request.CardNumber.Length - 4)),
-                ExpiryMonth = request.ExpiryMonth,
-                ExpiryYear = request.ExpiryYear,
-                Currency = request.Currency,
-                Amount = request.Amount,
-            };
-
-            return responsePayment;
+            return true;
         }
+    }
 
-        public PostPaymentResponse GeneratePostPaymentDBItem(PostPaymentRequest request, Enum paymentStatus, Guid paymentID)
+
+    public object GeneratePostPaymentResponse(PostPaymentRequest request, Enum paymentStatus, Guid paymentID)
+    {
+        var responsePayment = new GetPaymentResponse
         {
-            var responsePayment = new PostPaymentResponse
-            {
-                Id = paymentID,
-                Status = paymentStatus.ToString(),
-                CardNumberLastFour = Convert.ToInt32(request.CardNumber.Substring(request.CardNumber.Length - 4)),
-                ExpiryMonth = request.ExpiryMonth,
-                ExpiryYear = request.ExpiryYear,
-                Currency = request.Currency,
-                Amount = request.Amount,
-            };
+            Id = paymentID,
+            Status = paymentStatus.ToString(),
+            CardNumberLastFour = Convert.ToInt32(request.CardNumber.Substring(request.CardNumber.Length - 4)),
+            ExpiryMonth = request.ExpiryMonth,
+            ExpiryYear = request.ExpiryYear,
+            Currency = request.Currency,
+            Amount = request.Amount,
+        };
 
-            return responsePayment;
-        }
+        return responsePayment;
+    }
 
-
-        public async Task<AuthorizationResponse?> PostToBank(PostPaymentRequest request)
+    public PostPaymentResponse GeneratePostPaymentDBItem(PostPaymentRequest request, Enum paymentStatus, Guid paymentID)
+    {
+        var responsePayment = new PostPaymentResponse
         {
-            var jsonRequest = SerialiseToPost(request);
+            Id = paymentID,
+            Status = paymentStatus.ToString(),
+            CardNumberLastFour = Convert.ToInt32(request.CardNumber.Substring(request.CardNumber.Length - 4)),
+            ExpiryMonth = request.ExpiryMonth,
+            ExpiryYear = request.ExpiryYear,
+            Currency = request.Currency,
+            Amount = request.Amount,
+        };
 
-            var client = new HttpClient();
-            var url = "http://localhost:8080/payments";
+        return responsePayment;
+    }
 
-            var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
 
-            //Response
-            var response = await client.PostAsync(url, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-            // Deserialize the JSON content
-            AuthorizationResponse? authorizationResponse = JsonSerializer.Deserialize<AuthorizationResponse>(responseContent);
+    public async Task<AuthorizationResponse?> PostToBank(PostPaymentRequest request)
+    {
+        var jsonRequest = SerialiseToPost(request);
 
-            return authorizationResponse;
-        }
+        var client = new HttpClient();
+        var url = "http://localhost:8080/payments";
 
-        public string SerialiseToPost(PostPaymentRequest request)
+        var content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
+
+        //Response
+        var response = await client.PostAsync(url, content);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        // Deserialize the JSON content
+        AuthorizationResponse? authorizationResponse = JsonSerializer.Deserialize<AuthorizationResponse>(responseContent);
+
+        return authorizationResponse;
+    }
+
+    public string SerialiseToPost(PostPaymentRequest request)
+    {
+        var jsonRequest = JsonSerializer.Serialize(new
         {
-            var jsonRequest = JsonSerializer.Serialize(new
-            {
-                card_number = request.CardNumber.ToString(),
-                expiry_date = $"{request.ExpiryMonth:d2}/{request.ExpiryYear}",
-                currency = request.Currency,
-                amount = request.Amount,
-                cvv = request.Cvv.ToString()
-            });
+            card_number = request.CardNumber.ToString(),
+            expiry_date = $"{request.ExpiryMonth:d2}/{request.ExpiryYear}",
+            currency = request.Currency,
+            amount = request.Amount,
+            cvv = request.Cvv.ToString()
+        });
 
-            return jsonRequest;
-        }
-
+        return jsonRequest;
     }
 }
