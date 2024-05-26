@@ -24,11 +24,11 @@ public class PaymentsRepository
 public class UtilityFunctions
 {
     // List of valid ISO currency codes
-    private static readonly string[] ValidCurrencyCodes = { "USD", "EUR", "GBP" };
+    private static readonly string[] ValidCurrencyCodes = { "GBP", "EUR", "USD" };
 
-    public bool Validate(PostPaymentRequest request)
+    public string Validate(PostPaymentRequest request)
     {
-        bool validated = true;
+        string validString = "";
 
         // Card Number validation
         if (string.IsNullOrWhiteSpace(request.CardNumber) ||
@@ -36,20 +36,20 @@ public class UtilityFunctions
             request.CardNumber.Length > 19 ||
             !request.CardNumber.All(char.IsDigit))
         {
-            validated = false;
+            validString = "The card number is invalid";
         }
 
         // Expiry Month validation
         if (request.ExpiryMonth < 1 || request.ExpiryMonth > 12)
         {
-            validated = false;
+            validString = "The expiry month is invalid";
         }
 
         // Expiry Year validation
         if (request.ExpiryYear < DateTime.Now.Year ||
             (request.ExpiryYear == DateTime.Now.Year && request.ExpiryMonth < DateTime.Now.Month))
         {
-            validated = false;
+            validString = "The expiry year is invalid";
         }
 
         // Currency validation
@@ -57,39 +57,24 @@ public class UtilityFunctions
             request.Currency.Length != 3 ||
             !ValidCurrencyCodes.Contains(request.Currency.ToUpper()))
         {
-            validated = false;
+            validString = "The currency is invalid";
         }
 
         // Amount validation
         if (request.Amount <= 0 || request.Amount % 1 != 0)
         {
-            validated = false;
+            validString = "The amount is invalid";
         }
 
         // CVV validation
         if (request.Cvv.ToString().Length < 3 || request.Cvv.ToString().Length > 4 ||
             !request.Cvv.ToString().All(char.IsDigit))
         {
-            validated = false;
+            validString = "The Cvv is invalid";
         }
 
-        return validated;
+        return validString;
     }
-    public bool ValidatePaymentDetails(PostPaymentRequest request)
-    {
-        UtilityFunctions validator = new UtilityFunctions();
-        bool isValid = validator.Validate(request);
-
-        if (!isValid)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
 
     public object GeneratePostPaymentResponse(PostPaymentRequest request, Enum paymentStatus, Guid paymentID)
     {

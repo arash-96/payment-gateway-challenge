@@ -44,18 +44,21 @@ public class PaymentsController : Controller
         //Define payment ID
         Guid paymentID = Guid.NewGuid();
 
+        PostPaymentResponse paymentDetails;
+
         //Validate Data
-        bool isValidated = _utilityFunctions.ValidatePaymentDetails(request);      
-        if (!isValidated)
-        {
-            object response = _utilityFunctions.GeneratePostPaymentResponse(request, PaymentStatus.Rejected, paymentID);
-            return Ok(response);
+        string isValidated = _utilityFunctions.Validate(request);      
+        if (isValidated != "") 
+        {            
+            //Add Rejected request to the DB?
+            //paymentDetails = _utilityFunctions.GeneratePostPaymentDBItem(request, PaymentStatus.Rejected, paymentID);
+            
+            return BadRequest(isValidated);
         }
 
         //Bank Response
         var bankResponse = await _utilityFunctions.PostToBank(request);
-
-        PostPaymentResponse paymentDetails;
+                
         if (bankResponse != null && bankResponse.Authorized)
         {
             paymentDetails = _utilityFunctions.GeneratePostPaymentDBItem(request, PaymentStatus.Authorized, paymentID);
