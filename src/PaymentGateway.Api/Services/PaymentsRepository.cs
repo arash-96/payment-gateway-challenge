@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text;
 using System.Text.Json;
 
 using PaymentGateway.Api.Models.Requests;
@@ -28,7 +29,7 @@ public class UtilityFunctions
 
     public string Validate(PostPaymentRequest request)
     {
-        string validString = "";
+        StringBuilder validString = new StringBuilder();
 
         // Card Number validation
         if (string.IsNullOrWhiteSpace(request.CardNumber) ||
@@ -36,20 +37,20 @@ public class UtilityFunctions
             request.CardNumber.Length > 19 ||
             !request.CardNumber.All(char.IsDigit))
         {
-            validString = "The card number is invalid";
+            validString.AppendLine("The card number is invalid");
         }
 
         // Expiry Month validation
         if (request.ExpiryMonth < 1 || request.ExpiryMonth > 12)
         {
-            validString = "The expiry month is invalid";
+            validString.AppendLine("The expiry month is invalid");
         }
 
         // Expiry Year validation
         if (request.ExpiryYear < DateTime.Now.Year ||
             (request.ExpiryYear == DateTime.Now.Year && request.ExpiryMonth < DateTime.Now.Month))
         {
-            validString = "The expiry year is invalid";
+            validString.AppendLine("The expiry year is invalid");
         }
 
         // Currency validation
@@ -57,23 +58,23 @@ public class UtilityFunctions
             request.Currency.Length != 3 ||
             !ValidCurrencyCodes.Contains(request.Currency.ToUpper()))
         {
-            validString = "The currency is invalid";
+            validString.AppendLine("The currency is invalid");
         }
 
         // Amount validation
         if (request.Amount <= 0 || request.Amount % 1 != 0)
         {
-            validString = "The amount is invalid";
+            validString.AppendLine("The amount is invalid");
         }
 
         // CVV validation
         if (request.Cvv.ToString().Length < 3 || request.Cvv.ToString().Length > 4 ||
             !request.Cvv.ToString().All(char.IsDigit))
         {
-            validString = "The Cvv is invalid";
+            validString.AppendLine("The Cvv is invalid");
         }
 
-        return validString;
+        return validString.ToString().Trim();
     }
 
     public object GeneratePostPaymentResponse(PostPaymentRequest request, Enum paymentStatus, Guid paymentID)
