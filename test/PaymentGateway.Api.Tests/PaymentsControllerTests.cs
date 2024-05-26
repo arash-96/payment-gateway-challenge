@@ -17,6 +17,7 @@ namespace PaymentGateway.Api.Tests;
 public class PaymentsControllerTests
 {
     private readonly Random _random = new();
+    private readonly UtilityFunctions _utilityFunctions = new();
 
     public static string GenerateRandomCardNumber()
     {
@@ -115,9 +116,7 @@ public class PaymentsControllerTests
             Currency = "USD", //valid
             Amount = _random.Next(1, 90000), //valid
             Cvv = _random.Next(100, 1000) //valid
-        };
-
-        Console.WriteLine(postPaymentRequest.CardNumber);
+        };              
 
         var webApplicationFactory = new WebApplicationFactory<PaymentsController>();
         var client = webApplicationFactory.CreateClient();
@@ -135,6 +134,152 @@ public class PaymentsControllerTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(paymentResponse);
+    }
+
+    [Fact]
+    public void Validate_ReturnEmptyString()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = GenerateRandomCardNumber(), //valid
+            ExpiryMonth = _random.Next(1, 13), //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            Currency = "USD", //valid
+            Amount = _random.Next(1, 90000), //valid
+            Cvv = _random.Next(100, 1000) //valid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+        bool isTrue = validate == "";
+
+        // Assert
+        Assert.True(isTrue);
+    }
+    [Fact]
+    public void Validate_ReturnInvalidCardNumber()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = "222240534324811255555555555555555555", //invalid
+            ExpiryMonth = _random.Next(1, 13), //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            Currency = "USD", //valid
+            Amount = _random.Next(1, 90000), //valid
+            Cvv = _random.Next(100, 1000) //valid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+        
+        // Assert
+        Assert.Equal("The card number is invalid", validate);
+    }
+    [Fact]
+    public void Validate_ReturnInvalidMonth()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = GenerateRandomCardNumber(), //valid
+            ExpiryMonth = _random.Next(13, 16), //invalid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            Currency = "USD", //valid
+            Amount = _random.Next(1, 90000), //valid
+            Cvv = _random.Next(100, 1000) //valid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+
+        // Assert
+        Assert.Equal("The expiry month is invalid", validate);
+    }
+
+    [Fact]
+    public void Validate_ReturnInvalidYear()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = GenerateRandomCardNumber(), //valid
+            ExpiryMonth = _random.Next(1, 13), //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year - 5, DateTime.Now.Year - 1), // invalid
+            Currency = "USD", //valid
+            Amount = _random.Next(1, 90000), //valid
+            Cvv = _random.Next(100, 1000) //valid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+
+        // Assert
+        Assert.Equal("The expiry year is invalid", validate);
+    }
+
+    [Fact]
+    public void Validate_ReturnInvalidCurrency()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = GenerateRandomCardNumber(), //valid
+            ExpiryMonth = _random.Next(1, 13), //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 20), // valid
+            Currency = "YYY", //invalid
+            Amount = _random.Next(1, 90000), //valid
+            Cvv = _random.Next(100, 1000) //valid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+
+        // Assert
+        Assert.Equal("The currency is invalid", validate);
+    }
+
+    [Fact]
+    public void Validate_ReturnInvalidAmount()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = GenerateRandomCardNumber(), //valid
+            ExpiryMonth = _random.Next(1, 12), //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 20), // valid
+            Currency = "USD", //valid
+            Amount = _random.Next(-100, 0), //invalid
+            Cvv = _random.Next(100, 1000) //valid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+
+        // Assert
+        Assert.Equal("The amount is invalid", validate);
+    }
+
+    [Fact]
+    public void Validate_ReturnInvalidCvv()
+    {
+        // Arrange
+        var postPaymentRequest = new PostPaymentRequest // Valid object
+        {
+            CardNumber = GenerateRandomCardNumber(), //valid
+            ExpiryMonth = _random.Next(1, 13), //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 20), // valid
+            Currency = "USD", //valid
+            Amount = _random.Next(1, 100000), //valid
+            Cvv = _random.Next(10000, 100000) //invalid
+        };
+
+        // Act
+        string validate = _utilityFunctions.Validate(postPaymentRequest);
+
+        // Assert
+        Assert.Equal("The Cvv is invalid", validate);
     }
 
 }
