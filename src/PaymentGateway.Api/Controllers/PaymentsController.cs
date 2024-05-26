@@ -1,12 +1,8 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
-
-using static PaymentGateway.Api.Services.UtilityFunctions;
 
 namespace PaymentGateway.Api.Controllers;
 
@@ -23,7 +19,7 @@ public class PaymentsController : Controller
         _utilityFunctions = utilityFunctions;        
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("getpayment/{id:guid}")]
     public ActionResult<PostPaymentResponse?> GetPayment(Guid id)
     {
         //Get Payment
@@ -38,7 +34,7 @@ public class PaymentsController : Controller
         return new OkObjectResult(payment);
     }
 
-    [HttpPost]
+    [HttpPost("sendpayment")]
     public async Task<ActionResult<PostPaymentResponse>> PostPayment([FromBody] PostPaymentRequest request)
     {       
         //Define payment ID

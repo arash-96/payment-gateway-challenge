@@ -55,7 +55,7 @@ public class PaymentsControllerTests
             .CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/Payments/{payment.Id}");
+        var response = await client.GetAsync($"/api/Payments/getpayment/{payment.Id}");
         var paymentResponse = await response.Content.ReadFromJsonAsync<PostPaymentResponse>();
         
         // Assert
@@ -71,7 +71,7 @@ public class PaymentsControllerTests
         var client = webApplicationFactory.CreateClient();
         
         // Act
-        var response = await client.GetAsync($"/api/Payments/{Guid.NewGuid()}");
+        var response = await client.GetAsync($"/api/Payments/getpayment/{Guid.NewGuid()}");
         
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -98,7 +98,7 @@ public class PaymentsControllerTests
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await client.PostAsync("/api/Payments", content);
+        var response = await client.PostAsync("/api/Payments/sendpayment", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -125,7 +125,7 @@ public class PaymentsControllerTests
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await client.PostAsync("/api/Payments", content);
+        var response = await client.PostAsync("/api/Payments/sendpayment", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -144,7 +144,7 @@ public class PaymentsControllerTests
         {
             CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(1, 13), //valid
-            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            ExpiryYear = _random.Next(DateTime.Now.Year + 1, DateTime.Now.Year + 10), // valid
             Currency = "USD", //valid
             Amount = _random.Next(1, 90000), //valid
             Cvv = _random.Next(100, 1000) //valid
@@ -165,7 +165,7 @@ public class PaymentsControllerTests
         {
             CardNumber = "222240534324811255555555555555555555", //invalid
             ExpiryMonth = _random.Next(1, 13), //valid
-            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            ExpiryYear = _random.Next(DateTime.Now.Year + 1, DateTime.Now.Year + 10), // valid
             Currency = "USD", //valid
             Amount = _random.Next(1, 90000), //valid
             Cvv = _random.Next(100, 1000) //valid
@@ -185,7 +185,7 @@ public class PaymentsControllerTests
         {
             CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(13, 16), //invalid
-            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            ExpiryYear = _random.Next(DateTime.Now.Year + 1, DateTime.Now.Year + 10), // valid
             Currency = "USD", //valid
             Amount = _random.Next(1, 90000), //valid
             Cvv = _random.Next(100, 1000) //valid
@@ -227,7 +227,7 @@ public class PaymentsControllerTests
         {
             CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(1, 13), //valid
-            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 20), // valid
+            ExpiryYear = _random.Next(DateTime.Now.Year + 1, DateTime.Now.Year + 10), // valid
             Currency = "YYY", //invalid
             Amount = _random.Next(1, 90000), //valid
             Cvv = _random.Next(100, 1000) //valid
@@ -248,7 +248,7 @@ public class PaymentsControllerTests
         {
             CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(1, 12), //valid
-            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 20), // valid
+            ExpiryYear = _random.Next(DateTime.Now.Year + 1, DateTime.Now.Year + 10), // valid
             Currency = "USD", //valid
             Amount = _random.Next(-100, 0), //invalid
             Cvv = _random.Next(100, 1000) //valid
@@ -269,7 +269,7 @@ public class PaymentsControllerTests
         {
             CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(1, 13), //valid
-            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 20), // valid
+            ExpiryYear = _random.Next(DateTime.Now.Year + 1, DateTime.Now.Year + 10), // valid
             Currency = "USD", //valid
             Amount = _random.Next(1, 100000), //valid
             Cvv = _random.Next(10000, 100000) //invalid
