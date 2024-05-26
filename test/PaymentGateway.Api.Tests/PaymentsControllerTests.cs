@@ -18,6 +18,18 @@ public class PaymentsControllerTests
 {
     private readonly Random _random = new();
 
+    public static string GenerateRandomCardNumber()
+    {
+        var rand = new Random();
+        string cardNumber = "";
+        int randomLength = rand.Next(14, 20);
+        for (int i = 0; i < randomLength; i++)
+        {
+            cardNumber += rand.Next(0, 10);
+        }
+        return cardNumber;
+    }
+
     [Fact]
     public async Task RetrievesAPaymentSuccessfully()
     {
@@ -70,7 +82,7 @@ public class PaymentsControllerTests
         // Arrange
         var postPaymentRequest = new PostPaymentRequest // Valid object
         {
-            CardNumber = "2222405343248112", //valid
+            CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(13, 20), // invalid
             ExpiryYear = _random.Next(DateTime.Now.Year - 20, DateTime.Now.Year - 10), // invalid
             Currency = "GBP", //valid
@@ -91,18 +103,21 @@ public class PaymentsControllerTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
     public async Task PostPayment_ReturnOk()
     {
         // Arrange
         var postPaymentRequest = new PostPaymentRequest // Valid object
         {
-            CardNumber = "2222405343248112", //valid
+            CardNumber = GenerateRandomCardNumber(), //valid
             ExpiryMonth = _random.Next(1, 13), //valid
-            ExpiryYear = _random.Next(DateTime.Now.Year - 20, DateTime.Now.Year - 10), // invalid
-            Currency = "GBP", //valid
+            ExpiryYear = _random.Next(DateTime.Now.Year, DateTime.Now.Year + 10), // valid
+            Currency = "USD", //valid
             Amount = _random.Next(1, 90000), //valid
             Cvv = _random.Next(100, 1000) //valid
         };
+
+        Console.WriteLine(postPaymentRequest.CardNumber);
 
         var webApplicationFactory = new WebApplicationFactory<PaymentsController>();
         var client = webApplicationFactory.CreateClient();
